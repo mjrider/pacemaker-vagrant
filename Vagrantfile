@@ -4,7 +4,8 @@ Vagrant.configure("2") do |config|
 	 numNodes = 2
  
 	 # IP Address Base for private network
-	 ipAddrPrefix = "192.168.56.10"
+	 ipAddrPrefix1 = "192.168.56.2"
+	 ipAddrPrefix2 = "192.168.57.2"
  
 	 # Define Number of RAM for each node
 	 config.vm.provider "virtualbox" do |v|
@@ -19,7 +20,8 @@ Vagrant.configure("2") do |config|
 		  config.vm.define nodeName do |node|
 				node.vm.host_name = nodeName
 	 			node.vm.box = "puppetlabs/debian-7.4-64-puppet"
-				node.vm.network :private_network, ip: ipAddrPrefix + num.to_s
+				node.vm.network :private_network, ip: ipAddrPrefix1 + num.to_s
+				node.vm.network :private_network, ip: ipAddrPrefix2 + num.to_s
 				node.vm.provider "virtualbox" do |v|
 					 v.name = "Node " + num.to_s
 				end

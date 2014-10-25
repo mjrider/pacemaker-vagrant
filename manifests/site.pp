@@ -28,11 +28,18 @@ node /^node\d+/ {
 	class { 'corosync':
 		enable_secauth    => true,
 		authkey => 'puppet:///modules/corosync/authkey',
-		bind_address      => $ipaddress_eth1,
-		multicast_address => '239.1.1.2',
+		bind_address      =>  [ $ipaddress_eth1, $ipaddress_eth2 ],
+		multicast_address => [ '239.1.1.2', '239.1.2.2' ],
+		port => [ 5405, 5415 ],
+		rrp_mode => 'active',
 		require => Class['apt'],
 	}
 	corosync::service { 'pacemaker':
 		version => '0',
+	}
+
+	user { "vagrant":
+		ensure => present,
+		shell  => "/bin/bash",
 	}
 }
