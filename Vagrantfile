@@ -1,29 +1,28 @@
 Vagrant.configure("2") do |config|
  
-    # Number of nodes to provision
-    numNodes = 2
+	 # Number of nodes to provision
+	 numNodes = 2
  
-    # IP Address Base for private network
-    ipAddrPrefix = "192.168.56.10"
+	 # IP Address Base for private network
+	 ipAddrPrefix = "192.168.56.10"
  
-    # Define Number of RAM for each node
-    config.vm.provider "virtualbox" do |v|
-        v.customize ["modifyvm", :id, "--memory", 256]
-    end
+	 # Define Number of RAM for each node
+	 config.vm.provider "virtualbox" do |v|
+		  v.customize ["modifyvm", :id, "--memory", 256]
+	 end
  
-    # Download the initial box from this url
+	 # Download the initial box from this url
  
-    # Provision Config for each of the nodes
-    1.upto(numNodes) do |num|
-        nodeName = ("node" + num.to_s).to_sym
-        config.vm.define nodeName do |node|
-            node.vm.box = "precise64"
+	 # Provision Config for each of the nodes
+	 1.upto(numNodes) do |num|
+		  nodeName = ("node" + num.to_s).to_sym
+		  config.vm.define nodeName do |node|
 				node.vm.host_name = nodeName
 	 			node.vm.box = "puppetlabs/debian-7.4-64-puppet"
-            node.vm.network :private_network, ip: ipAddrPrefix + num.to_s
-            node.vm.provider "virtualbox" do |v|
-                v.name = "Node " + num.to_s
-            end
+				node.vm.network :private_network, ip: ipAddrPrefix + num.to_s
+				node.vm.provider "virtualbox" do |v|
+					 v.name = "Node " + num.to_s
+				end
 				node.vm.provision :puppet do |puppet|
 					puppet.manifests_path = "manifests"
 					puppet.module_path = "modules"
@@ -31,7 +30,7 @@ Vagrant.configure("2") do |config|
 					puppet.options = "--verbose"
 					puppet.options = '--hiera_config=/etc/hiera.yaml'
 				end
-        end
-    end
+		  end
+	 end
  
 end
