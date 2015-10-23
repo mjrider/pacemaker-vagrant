@@ -15,14 +15,14 @@ describe Puppet::Type.type(:file_line) do
     file_line[:match] = '^foo.*$'
     expect(file_line[:match]).to eq('^foo.*$')
   end
-  it 'should not accept a match regex that does not match the specified line' do
+  it 'should accept a match regex that does not match the specified line' do
     expect {
       Puppet::Type.type(:file_line).new(
           :name   => 'foo',
           :path   => '/my/path',
           :line   => 'foo=bar',
           :match  => '^bar=blah$'
-    )}.to raise_error(Puppet::Error, /the value must be a regex that matches/)
+    )}.not_to raise_error
   end
   it 'should accept a match regex that does match the specified line' do
     expect {
@@ -48,6 +48,9 @@ describe Puppet::Type.type(:file_line) do
   end
   it 'should default to ensure => present' do
     expect(file_line[:ensure]).to eq :present
+  end
+  it 'should default to replace => true' do
+    expect(file_line[:replace]).to eq :true
   end
 
   it "should autorequire the file it manages" do
