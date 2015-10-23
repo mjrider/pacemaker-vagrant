@@ -1,28 +1,47 @@
 node /^node\d+/ {
 	class{ 'apt':
-		purge_sources_list   => true,
-		purge_sources_list_d   => true,
+    purge                => {
+      'sources.list'     => true,
+      'sources.list.d'   => true,
+    }
 	}
 
 	include apt
 
-	class { 'apt::release':
-		release_id => 'wheezy',
-	}
 	apt::source { 'debian':
-		location          => 'http://ftp.nl.debian.org/debian/',
-		repos             => 'main contrib non-free',
-		key               => '46925553',
-		key_server        => 'subkeys.pgp.net',
-		include_src       => false,
+		location    => 'http://ftp.nl.debian.org/debian/',
+		repos       => 'main contrib non-free',
+    key         => {
+      id        => 'A1BD8E9D78F7FE5C3E65D8AF8B48AD6246925553',
+      server    => 'pool.sks-keyservers.net'
+    },
+    include     => {
+      src       => false
+    }
+	}
+	apt::source { 'debian-security':
+		location    => 'http://security.debian.org/',
+		repos       => 'main contrib non-free',
+    key         => {
+      id        => 'A1BD8E9D78F7FE5C3E65D8AF8B48AD6246925553',
+      server    => 'pool.sks-keyservers.net'
+    },
+    include     => {
+      src       => false
+    },
+    release     => 'wheezy/updates'
 	}
 
 	apt::source { 'puppetlabs':
 		location   => 'http://apt.puppetlabs.com',
 		repos      => 'main',
-		key        => '4BD6EC30',
-		key_server => 'pgp.mit.edu',
-		include_src       => false,
+    key         => {
+      id        => '47B320EB4C7C375AA9DAE1A01054B7A24BD6EC30',
+      server    => 'pool.sks-keyservers.net'
+    },
+    include     => {
+      src       => false
+    }
 	}
 
 	class { 'corosync':
