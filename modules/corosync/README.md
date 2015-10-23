@@ -1,7 +1,7 @@
-Puppet Labs module for Corosync
+Puppet Community module for Corosync
 ============================
 
-[![Build Status](https://travis-ci.org/puppetlabs/puppetlabs-corosync.png?branch=master)](https://travis-ci.org/puppetlabs/puppetlabs-corosync)
+[![Build Status](https://travis-ci.org/puppet-community/puppet-corosync.png?branch=master)](https://travis-ci.org/puppet-community/puppet-community-corosync)
 
 Corosync is a cluster stack written as a reimplementation of all the core
 functionalities required by openais.  Meant to provide 100% correct operation
@@ -68,7 +68,7 @@ cs_primitive { 'nginx_service':
 *Make Corosync manage and monitor the state of Apache using a LSB agent*
 
 ```puppet
-cs_primitive { 'nginx_service':
+cs_primitive { 'apache_service':
   primitive_class => 'lsb',
   primitive_type  => 'apache2',
   provided_by     => 'heartbeat',
@@ -137,9 +137,24 @@ cs_order { 'vip_before_service':
 }
 ```
 
+Configuring cloned resources
+----------------------------
+
+Cloned resources should be active on multiple hosts at the same time. You can
+clone any existing resource provided the resource agent supports it.
+
+```puppet
+cs_clone { 'nginx_service-clone' :
+  ensure    => present,
+  primitive => 'nginx_service',
+  clone_max => 3,
+  require   => Cs_primitive['nginx_service'],
+}
+```
+
 Corosync Properties
 ------------------
-A few gloabal settings can be changed with the "cs_property" section.
+A few global settings can be changed with the "cs_property" section.
 
 
 Disable STONITH if required.
@@ -156,6 +171,16 @@ cs_property { 'no-quorum-policy' :
 }
 ```
 
+Resource defaults
+-----------------
+A few global settings can be changed with the "cs_rsc_defaults" section.
+
+Don't move resources.
+```puppet
+cs_rsc_defaults { 'resource-stickiness' :
+  value => 'INFINITY',
+}
+```
 
 Dependencies
 ------------
@@ -183,7 +208,7 @@ there are more incomplete examples spread across the [Puppet Labs Github](https:
 Contributors
 ------------
 
-  * [See Puppet Labs Github](https://github.com/puppetlabs/puppetlabs-corosync/graphs/contributors)
+  * [See Github](https://github.com/puppet-community/puppet-community-corosync/graphs/contributors)
 
 Copyright and License
 ---------------------

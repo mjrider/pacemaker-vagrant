@@ -62,8 +62,50 @@
 # [*ttl*]
 #   Time To Live (multicast only).
 #
+# [*package_corosync*]
+#   Define if package corosync should be installed.
+#   Defaults to true
+#
+# [*version_corosync*]
+#   Define what version of corosync should be installed.
+#   Defaults to present
+#
+# [*package_pacemaker*]
+#   Define if package pacemaker should be installed.
+#   Defaults to true
+#
+# [*version_pacemaker*]
+#   Define what version of pacemaker should be installed.
+#   Defaults to present
+#
+# [*package_pcs*]
+#   Define if package pcs should be installed.
+#   Defaults to true
+#
+# [*version_pcs*]
+#   Define what version of pcs should be installed.
+#   Defaults to present
+#
+# [*set_votequorum*]
+#   Set to true if corosync_votequorum should be used as quorum provider.
+#   Defaults to false.
+#
+# [*quorum_members*]
+#   Array of quorum member hostname. This is required if set_votequorum
+#   is set to true.
+#   Defaults to undef,
+#
+# [*token*]
+#   Time (in ms) to wait for a token
+#
+# [*token_retransmits_before_loss_const*]
+#   How many token retransmits before forming a new configuration
+#
+# === Deprecated Parameters
+#
 # [*packages*]
-#   Define the list of software packages which should be installed.
+#   Deprecated in favour of package_{corosync,pacemaker} and
+#   version_{corosync,pacemaker}. Array of packages to install.
 #
 # === Examples
 #
@@ -82,21 +124,95 @@
 # Copyright 2012, Puppet Labs, LLC.
 #
 class corosync(
-  $enable_secauth    = $::corosync::params::enable_secauth,
-  $authkey_source    = $::corosync::params::authkey_source,
-  $authkey           = $::corosync::params::authkey,
-  $threads           = $::corosync::params::threads,
-  $port              = $::corosync::params::port,
-  $bind_address      = $::corosync::params::bind_address,
-  $multicast_address = $::corosync::params::multicast_address,
-  $unicast_addresses = $::corosync::params::unicast_addresses,
-  $force_online      = $::corosync::params::force_online,
-  $check_standby     = $::corosync::params::check_standby,
-  $debug             = $::corosync::params::debug,
-  $rrp_mode          = $::corosync::params::rrp_mode,
-  $ttl               = $::corosync::params::ttl,
-  $packages          = $::corosync::params::packages,
+  $enable_secauth                      = $::corosync::params::enable_secauth,
+  $authkey_source                      = $::corosync::params::authkey_source,
+  $authkey                             = $::corosync::params::authkey,
+  $threads                             = $::corosync::params::threads,
+  $port                                = $::corosync::params::port,
+  $bind_address                        = $::corosync::params::bind_address,
+  $multicast_address                   = $::corosync::params::multicast_address,
+  $unicast_addresses                   = $::corosync::params::unicast_addresses,
+  $force_online                        = $::corosync::params::force_online,
+  $check_standby                       = $::corosync::params::check_standby,
+  $debug                               = $::corosync::params::debug,
+  $rrp_mode                            = $::corosync::params::rrp_mode,
+  $ttl                                 = $::corosync::params::ttl,
+  $packages                            = undef,
+  $package_corosync                    = undef,
+  $version_corosync                    = undef,
+  $package_pacemaker                   = undef,
+  $version_pacemaker                   = undef,
+  $package_pcs                         = undef,
+  $version_pcs                         = undef,
+  $set_votequorum                      = $::corosync::params::set_votequorum,
+  $quorum_members                      = ['localhost'],
+  $token                               = $::corosync::params::token,
+  $token_retransmits_before_loss_const = $::corosync::params::token_retransmits_before_lost_const,
 ) inherits ::corosync::params {
+
+  if $set_votequorum and !$quorum_members {
+    fail('set_votequorum is true, but no quorum_members have been passed.')
+  }
+
+  if $packages {
+    warning('$corosync::packages is deprecated, use $corosync::package_{corosync,pacemaker} instead!')
+
+    package{ $packages:
+      ensure => present,
+    }
+
+    # Ensure no options conflicting with $packages are set:
+
+    if $package_corosync {
+      fail('$corosync::package_corosync and $corosync::packages must not be mixed!')
+    }
+    if $package_pacemaker {
+      fail('$corosync::package_pacemaker and $corosync::packages must not be mixed!')
+    }
+    if $version_corosync {
+      fail('$corosync::version_corosync and $corosync::packages must not be mixed!')
+    }
+    if $version_pacemaker {
+      fail('$corosync::version_pacemaker and $corosync::packages must not be mixed!')
+    }
+  } else {
+      # Handle defaults for new-style package parameters here to allow co-existence with $packages.
+      if $package_corosync == undef {
+        $_package_corosync = true
+      } else {
+        $_package_corosync = $package_corosync
+      }
+
+      if $package_pacemaker == undef {
+        $_package_pacemaker = true
+      } else {
+        $_package_pacemaker = $package_pacemaker
+      }
+
+      if $version_corosync == undef {
+        $_version_corosync = present
+      } else {
+        $_version_corosync = $version_corosync
+      }
+
+      if $version_pacemaker == undef {
+        $_version_pacemaker = present
+      } else {
+        $_version_pacemaker = $version_pacemaker
+      }
+
+      if $_package_corosync == true {
+        package { 'corosync':
+          ensure => $_version_corosync,
+        }
+      }
+
+      if $_package_pacemaker == true {
+        package { 'pacemaker':
+          ensure => $_version_pacemaker,
+        }
+      }
+    }
 
   if ! is_bool($enable_secauth) {
     validate_re($enable_secauth, '^(on|off)$')
@@ -154,18 +270,35 @@ class corosync(
     }
   }
 
-  package {$packages:
-    ensure => present,
-  }
+  if $::osfamily == 'RedHat' {
+    if $package_pcs == undef {
+      $_package_pcs = true
+    } else {
+      $_package_pcs = $package_pcs
+    }
+  
+    if $version_pcs == undef {
+      $_version_pcs = present
+    } else {
+      $_version_pcs = $version_pcs
+    }
 
+    if $_package_pcs {
+      package { 'pcs':
+        ensure => $_version_pcs,
+      }
+    }
+  }
+  
   # Template uses:
   # - $unicast_addresses
   # - $multicast_address
   # - $debug
-  # - $bind_address_real
-  # - $port_real
+  # - $bind_address
+  # - $port
   # - $enable_secauth_real
-  # - $threads_real
+  # - $threads
+  # - $token
   file { '/etc/corosync/corosync.conf':
     ensure  => file,
     mode    => '0644',
