@@ -19,7 +19,7 @@ Vagrant.configure("2") do |config|
 		  nodeName = ("node" + num.to_s).to_sym
 		  config.vm.define nodeName do |node|
 				node.vm.host_name = nodeName
-	 			node.vm.box = "puppetlabs/debian-7.4-64-puppet"
+				node.vm.box = "mjrider/debian-7-puppet"
 				node.vm.network :private_network, ip: ipAddrPrefix1 + num.to_s
 				node.vm.network :private_network, ip: ipAddrPrefix2 + num.to_s
 				node.vm.provider "virtualbox" do |v|
